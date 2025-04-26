@@ -15,12 +15,14 @@ var (
 	BotToken string
 	commands = []*discordgo.ApplicationCommand{
 		ridealong.Command,
-		ping.Command,
+		misc.ID_Commmand,
+		misc.PING_Command,
 	}
 
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		"ra":   ridealong.ParseCommand,
-		"ping": ping.ParseCommand,
+		"ping": misc.PING_ParseCommand,
+		"what-is-my-id": misc.ID_ParseCommand,
 	}
 )
 

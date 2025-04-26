@@ -1,4 +1,4 @@
-package ping
+package misc
 
 import (
 	"fmt"
@@ -6,12 +6,12 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var Command = &discordgo.ApplicationCommand{
+var PING_Command = &discordgo.ApplicationCommand{
 	Name:        "ping",
 	Description: "Get the Bots ping",
 }
 
-func ParseCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func PING_ParseCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if i.Type != discordgo.InteractionApplicationCommand {
 		return
 	}
