@@ -97,4 +97,40 @@ docker run -d --name gobot --env-file .env gobot
 - `/what-is-my-id` - Get your Discord user ID
 - *Working on more features*
 
-### [License](https://github.com/Bluejutzu/GoBot?tab=MIT-1-ov-file)
+## Command Registration
+
+Commands in GoBot are registered through a structured system:
+
+1. Command Definition
+   - Commands are defined as ApplicationCommand structs in the `commands` slice
+   - Each command specifies its `name`, `description`, and any `options`
+
+2. Command Handler Mapping
+   - Each command has a corresponding handler function in the `commandHandlers` map
+   - Handlers process the command when it's triggered by a user
+
+3. Registration Process
+   - Commands are automatically registered with Discord's API during bot startup
+   - The bot creates `application_commands` for each defined command
+
+**Example of how commands are structured:**
+```go
+// Command definition
+var ExampleCommand = &discordgo.ApplicationCommand{
+    Name: "example",
+    Description: "An example command",
+}
+
+// Hanlder function
+func HandleExampleCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+  // ...add code here
+}
+
+// Handler mapping | bot.go
+commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+		"example": HandleExampleCommand,
+	}
+
+```
+
+## [License](https://github.com/Bluejutzu/GoBot?tab=MIT-1-ov-file)
