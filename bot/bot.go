@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/bluejutzu/GoBot/commands/misc"
 	"github.com/bluejutzu/GoBot/commands/ridealong"
 	"github.com/bwmarrin/discordgo"
 )
@@ -14,10 +15,12 @@ var (
 	BotToken string
 	commands = []*discordgo.ApplicationCommand{
 		ridealong.Command,
+		ping.Command,
 	}
 
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-		"ra": ridealong.ParseCommand,
+		"ra":   ridealong.ParseCommand,
+		"ping": ping.ParseCommand,
 	}
 )
 
