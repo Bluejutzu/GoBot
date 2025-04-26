@@ -16,3 +16,4 @@ func MessageCreate(c *discordgo.Session, m *discordgo.MessageCreate) {
 		c.ChannelMessageSendReply(m.ChannelID, "Hello!", m.Reference())
 	}
 }
+	

@@ -1,35 +1,79 @@
 package bot
 
 import (
-	"fmt"
-	"log"
-	"os"
-	"os/signal"
+    "fmt"
+    "log"
+    "os"
+    "os/signal"
 
-	"github.com/bluejutzu/GoBot/handlers"
-	"github.com/bwmarrin/discordgo"
+    "github.com/bluejutzu/GoBot/commands/ridealong"
+    "github.com/bwmarrin/discordgo"
 )
 
-var BotToken string
+var (
+    BotToken string
+    commands = []*discordgo.ApplicationCommand{
+        ridealong.Command,
+    }
+
+    commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+        "ra": ridealong.ParseCommand,
+    }
+)
 
 func Run() {
-	discord, err := discordgo.New("Bot " + BotToken)
-	checkNilErr(err)
+    // Check if token is empty
+    if BotToken == "" {
+        log.Fatal("Bot token is not set")
+    }
 
-	discord.AddHandler(handlers.MessageCreate)
+    // Create Discord session
+    discord, err := discordgo.New("Bot " + BotToken)
+    if err != nil {
+        log.Fatal("Error creating Discord session:", err)
+    }
 
-	discord.Open()
-	defer discord.Close()
+    // Open connection to Discord
+    err = discord.Open()
+    if err != nil {
+        log.Fatal("Error opening connection:", err)
+    }
 
-	fmt.Println("Bot running...")
+    // Register commands after establishing connection
+    registeredCommands := make([]*discordgo.ApplicationCommand, len(commands))
+    for i, command := range commands {
+        cmd, err := discord.ApplicationCommandCreate(discord.State.User.ID, "", command)
+        if err != nil {
+            log.Fatalf("Error creating command %v: %v", command.Name, err)
+        }
+        registeredCommands[i] = cmd
+    }
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	<-c
-}
+    // Add handlers
+    discord.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+        if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
+            h(s, i)
+        }
+    })
 
-func checkNilErr(e error) {
-	if e != nil {
-		log.Fatal("Error as occured")
-	}
+    discord.AddHandler(ridealong.HandleButtons)
+    discord.AddHandler(ridealong.HandleModal)
+
+    defer func() {
+        // Cleanup commands on shutdown
+        for _, cmd := range registeredCommands {
+            err := discord.ApplicationCommandDelete(discord.State.User.ID, "", cmd.ID)
+            if err != nil {
+                log.Printf("Cannot delete command %v: %v", cmd.Name, err)
+            }
+        }
+        discord.Close()
+    }()
+
+    fmt.Println("Bot is now running. Press CTRL-C to exit.")
+
+    // Wait for interrupt signal
+    stop := make(chan os.Signal, 1)
+    signal.Notify(stop, os.Interrupt)
+    <-stop
 }
