@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  gobot:
+    build: .
+    container_name: gobot
+    restart: unless-stopped
+    env_file:
+      - .env
