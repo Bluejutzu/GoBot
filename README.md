@@ -154,4 +154,4 @@ commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interaction
 
 ```
 
-## [License](https://github.com/Bluejutzu/GoBot?tab=MIT-1-ov-file)
+## [License (MIT)](https://github.com/Bluejutzu/GoBot?tab=MIT-1-ov-file)
