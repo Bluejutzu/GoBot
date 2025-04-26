@@ -29,45 +29,51 @@ Gobot is a side project of mine which was solely created to understand the "Go" 
 
 ### Built With
 
-* [Go](https://go.dev/) - The programming language used
-* [DiscordGo](https://github.com/bwmarrin/discordgo) - Go package for Discord API integration
-* [GoDotEnv](https://github.com/joho/godotenv) - Environment variable management
-* [Docker](https://www.docker.com/) - Containerization
+- [Go](https://go.dev/) - The programming language used
+- [DiscordGo](https://github.com/bwmarrin/discordgo) - Go package for Discord API integration
+- [GoDotEnv](https://github.com/joho/godotenv) - Environment variable management
+- [Docker](https://www.docker.com/) - Containerization
 
 ## Getting Started
 
 ### Prerequisites
 
-* [Go](https://go.dev/dl/) (1.24 or higher)
-* [Docker](https://www.docker.com/get-started) (optional)
-* Discord Bot Token (from [Discord Developer Portal](https://discord.com/developers/applications))
+- [Go](https://go.dev/dl/) (1.24 or higher)
+- [Docker](https://www.docker.com/get-started) (optional)
+- Discord Bot Token (from [Discord Developer Portal](https://discord.com/developers/applications))
 
 ### Installation
 
 1. Clone the repository
+
 ```bash
 git clone https://github.com/bluejutzu/GoBot.git
 ```
 
 2. Install dependencies
+
 ```bash
 go mod download
 ```
 
 3. Create a `.env` file in the root directory with the following:
+
 ```env
 BOT_TOKEN="your_bot_token_here"
 ```
-  or rename the [`.env.example`](/.env.example) to `.env` and change the `BOT_TOKEN` value.
+
+or rename the [`.env.example`](/.env.example) to `.env` and change the `BOT_TOKEN` value.
 
 ## Usage
 
 ### Running Locally
+
 ```bash
 go run main.go
 ```
 
 ### Using Docker
+
 ```bash
 # Build the container
 docker build -t gobot .
@@ -77,6 +83,7 @@ docker run -d --name gobot --env-file .env gobot
 ```
 
 ### Updating Docker Container
+
 When you make changes to your `.env` file or any other files, you'll need to rebuild and restart the container:
 
 ```bash
@@ -95,17 +102,19 @@ docker run -d --name gobot --env-file .env gobot
 
 - `/ping` - Check if the bot is online
 - `/what-is-my-id` - Get your Discord user ID
-- *Working on more features*
+- _Working on more features_
 
 ## Command Registration
 
 Commands in GoBot are registered through a structured system:
 
 1. Command Definition
+
    - Commands are defined as ApplicationCommand structs in the `commands` slice
    - Each command specifies its `name`, `description`, and any `options`
 
 2. Command Handler Mapping
+
    - Each command has a corresponding handler function in the `commandHandlers` map
    - Handlers process the command when it's triggered by a user
 
@@ -113,8 +122,11 @@ Commands in GoBot are registered through a structured system:
    - Commands are automatically registered with Discord's API during bot startup
    - The bot creates `application_commands` for each defined command
 
-**Example of how commands are structured:**
+__**Example of how commands are structured:**__
+
 ```go
+package misc
+
 // Command definition
 var ExampleCommand = &discordgo.ApplicationCommand{
     Name: "example",
@@ -126,10 +138,18 @@ func HandleExampleCommand(s *discordgo.Session, i *discordgo.InteractionCreate) 
   // ...add code here
 }
 
-// Handler mapping | bot.go
+```
+
+__**And in the [bot/bot.go](/bot/bot.go) file:**__
+```go
+// command mapping
+commands = []*discordgo.ApplicationCommand{
+		misc.ExampleCommand,
+}
+// Handler mapping
 commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		"example": HandleExampleCommand,
-	}
+}
 
 ```
 
