@@ -58,6 +58,7 @@ go mod download
 ```env
 BOT_TOKEN="your_bot_token_here"
 ```
+  or rename the [`.env.example`](/.env.example) to `.env` and change the `BOT_TOKEN` value.
 
 ## Usage
 
