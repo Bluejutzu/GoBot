@@ -143,11 +143,11 @@ func HandleExampleCommand(s *discordgo.Session, i *discordgo.InteractionCreate) 
 __**And in the [bot/bot.go](/bot/bot.go) file:**__
 ```go
 // command mapping
-commands = []*discordgo.ApplicationCommand{
+commands = []*discordgo.ApplicationCommand {
 	misc.ExampleCommand,
 }
 // Handler mapping
-commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	"example": HandleExampleCommand,
 }
 
