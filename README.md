@@ -20,6 +20,7 @@ A personal Discord bot project built with [Go](https://go.dev/), utilizing the [
     </li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#features">Features</a></li>
+    <li><a href="#command-registration">Command Registration</a></li>
   </ol>
 </details>
 
