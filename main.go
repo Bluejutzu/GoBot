@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/bluejutzu/GoBot/bot"
+	"github.com/joho/godotenv"
 )
 
 func main() {
