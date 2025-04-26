@@ -17,12 +17,14 @@ var (
 		ridealong.Command,
 		misc.ID_Commmand,
 		misc.PING_Command,
+		misc.EIGHTBALL_Command,
 	}
 
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		"ra":   ridealong.ParseCommand,
 		"ping": misc.PING_ParseCommand,
 		"what-is-my-id": misc.ID_ParseCommand,
+		"8ball": misc.EIGHTBALL_ParseCommand,
 	}
 )
 

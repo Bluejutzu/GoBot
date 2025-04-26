@@ -3,6 +3,7 @@ package misc
 import (
 	"fmt"
 
+	"github.com/bluejutzu/GoBot/helpers"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -12,20 +13,13 @@ var ID_Commmand = &discordgo.ApplicationCommand{
 }
 
 func ID_ParseCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if i == nil || i.Interaction == nil {
+	ok := helpers.SafeCommandParse(i, ID_Commmand.Name)
+
+	if !ok {
 		return
 	}
 
-	if i.Type != discordgo.InteractionApplicationCommand {
-		return
-	}
-
-	data := i.ApplicationCommandData()
-	if data.Name != "what-is-my-id" {
-		return
-	}
-
-	// Check if User is nil before accessing
+	// Check if Member is nil before accessing
 	if i.Interaction.Member == nil {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,

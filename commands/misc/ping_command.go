@@ -3,6 +3,7 @@ package misc
 import (
 	"fmt"
 
+	"github.com/bluejutzu/GoBot/helpers"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -12,15 +13,12 @@ var PING_Command = &discordgo.ApplicationCommand{
 }
 
 func PING_ParseCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if i.Type != discordgo.InteractionApplicationCommand {
+	ok := helpers.SafeCommandParse(i, PING_Command.Name)
+
+	if !ok {
 		return
 	}
-
-	data := i.ApplicationCommandData()
-	if data.Name != "ping" {
-		return
-	}
-
+	
 	latency := s.HeartbeatLatency()
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
