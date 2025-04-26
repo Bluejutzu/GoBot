@@ -140,7 +140,7 @@ func HandleExampleCommand(s *discordgo.Session, i *discordgo.InteractionCreate) 
 
 ```
 
-__**And in the [bot/bot.go](/bot/bot.go) file:**__
+__**And in the [bot/bot.go](/bot/bot.go#L30) file:**__
 ```go
 // command mapping
 commands = []*discordgo.ApplicationCommand {
