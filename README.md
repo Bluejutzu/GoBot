@@ -144,11 +144,11 @@ __**And in the [bot/bot.go](/bot/bot.go) file:**__
 ```go
 // command mapping
 commands = []*discordgo.ApplicationCommand{
-		misc.ExampleCommand,
+	misc.ExampleCommand,
 }
 // Handler mapping
 commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-		"example": HandleExampleCommand,
+	"example": HandleExampleCommand,
 }
 
 ```
