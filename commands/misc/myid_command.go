@@ -12,6 +12,10 @@ var ID_Commmand = &discordgo.ApplicationCommand{
 }
 
 func ID_ParseCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	if i == nil || i.Interaction == nil {
+		return
+	}
+
 	if i.Type != discordgo.InteractionApplicationCommand {
 		return
 	}
@@ -21,10 +25,27 @@ func ID_ParseCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	// Check if User is nil before accessing
+	if i.Interaction.Member == nil {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Error: Could not retrieve user information",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
+	userID := i.Interaction.Member.User.ID
+	guildID := "Direct Message"
+	if i.Interaction.GuildID != "" {
+		guildID = i.Interaction.GuildID
+	}
+
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: fmt.Sprintf("<@!%s> ID: `%v` \nCommand used in server: %v ", i.Interaction.User.ID, i.Interaction.User.ID, i.Interaction.GuildID),
+			Content: fmt.Sprintf("<@!%s> \nUser ID: `%s` \nServer ID: %s", userID, userID, guildID),
 			Flags:   discordgo.MessageFlagsEphemeral,
 		},
 	})
