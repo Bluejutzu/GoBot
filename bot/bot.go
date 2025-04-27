@@ -45,7 +45,7 @@ func Run() {
 		log.Fatal("Error creating Discord session:", err)
 	}
 
-	discord.Identify.Intents = discordgo.IntentsGuildMessages | discordgo.IntentsMessageContent
+	discord.Identify.Intents = discordgo.IntentsGuildMessages | discordgo.IntentsMessageContent | discordgo.IntentsGuildPresences
 
 	err = discord.Open()
 	if err != nil {
