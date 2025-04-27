@@ -20,6 +20,7 @@ A personal Discord bot project built with [Go](https://go.dev/), utilizing the [
     </li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#features">Features</a></li>
+    <li><a href="#command-registration">Command Registration</a></li>
   </ol>
 </details>
 
@@ -140,7 +141,7 @@ func HandleExampleCommand(s *discordgo.Session, i *discordgo.InteractionCreate) 
 
 ```
 
-__**And in the [bot/bot.go](/bot/bot.go) file:**__
+__**And in the [bot/bot.go](/bot/bot.go#L30) file:**__
 ```go
 // command mapping
 commands = []*discordgo.ApplicationCommand {
@@ -153,4 +154,4 @@ commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interaction
 
 ```
 
-## [License](https://github.com/Bluejutzu/GoBot?tab=MIT-1-ov-file)
+## [License (MIT)](https://github.com/Bluejutzu/GoBot?tab=MIT-1-ov-file)
