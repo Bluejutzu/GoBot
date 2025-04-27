@@ -33,6 +33,7 @@ Gobot is a side project of mine which was solely created to understand the "Go" 
 - [Go](https://go.dev/) - The programming language used
 - [DiscordGo](https://github.com/bwmarrin/discordgo) - Go package for Discord API integration
 - [GoDotEnv](https://github.com/joho/godotenv) - Environment variable management
+- [cobra](https://github.com/spf13/cobra) - A Commander for modern Go CLI interactions
 - [Docker](https://www.docker.com/) - Containerization
 
 ## Getting Started
