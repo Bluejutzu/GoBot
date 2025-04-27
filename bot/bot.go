@@ -7,6 +7,7 @@ import (
 	"os/signal"
 
 	"github.com/bluejutzu/GoBot/commands/misc"
+	"github.com/bluejutzu/GoBot/commands/moderation"
 	"github.com/bluejutzu/GoBot/commands/ridealong"
 	"github.com/bwmarrin/discordgo"
 )
@@ -15,23 +16,29 @@ var (
 	BotToken string
 	commands = []*discordgo.ApplicationCommand{
 		ridealong.Command,
+
 		misc.ID_Commmand,
 		misc.PING_Command,
 		misc.EIGHTBALL_Command,
+
+		moderation.BAN_Command,
 	}
 
 	/*
-	CommandHandlers stores the mapping between Discord slash commands and their handler functions.
+		CommandHandlers stores the mapping between Discord slash commands and their handler functions.
 
-	map[string]func(*discordgo.Session, *discordgo.InteractionCreate)
-	  - string: The command name that triggered the interaction
-	  - func: The handler function that processes the interaction
-	  */
+		map[string]func(*discordgo.Session, *discordgo.InteractionCreate)
+		  - string: The command name that triggered the interaction
+		  - func: The handler function that processes the interaction
+	*/
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		"ra":            ridealong.ParseCommand,
+
 		"ping":          misc.PING_ParseCommand,
 		"what-is-my-id": misc.ID_ParseCommand,
 		"8ball":         misc.EIGHTBALL_ParseCommand,
+
+		"ban":           moderation.BAN_ParseCommand,
 	}
 )
 

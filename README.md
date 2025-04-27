@@ -154,4 +154,8 @@ commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interaction
 
 ```
 
-## [License (MIT)](https://github.com/Bluejutzu/GoBot?tab=MIT-1-ov-file)
+## Command Line Interface (CLI)
+
+Gobot has it's own CLI, named `gobot`, that has tools and utilities for this certain project. As of now the CLI is available in the repository.
+
+# [License (MIT)](https://github.com/Bluejutzu/GoBot?tab=MIT-1-ov-file)
