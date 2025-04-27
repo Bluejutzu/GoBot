@@ -125,7 +125,7 @@ func packageCLISource() ([]byte, error) {
 		}
 
 		// Create relative path for the tar
-		relPath, err := filepath.Rel("../cli", path)
+		relPath, err := filepath.Rel("./cli", path)
 		if err != nil {
 			return err
 		}
