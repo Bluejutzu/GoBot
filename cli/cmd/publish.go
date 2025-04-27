@@ -114,7 +114,7 @@ func packageCLISource() ([]byte, error) {
 	tw := tar.NewWriter(gw)
 
 	// Walk through the cli directory
-	err := filepath.Walk("../cli", func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk("./cli", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
