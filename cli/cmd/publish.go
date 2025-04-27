@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"os/exec"
@@ -123,25 +124,88 @@ func runPublish(cmd *cobra.Command, args []string) error {
 
 // publishToPkgDev handles the package publishing to pkg.dev
 func publishToPkgDev(version string, binary []byte) error {
-	request := PkgPublishRequest{
-		Version: version,
-		Binary:  binary,
-	}
+	const chunkSize = 1024 * 1024 * 5 // 5MB chunks
 
-	data, err := json.Marshal(request)
+	// First, initiate the upload and get an upload ID
+	initResp, err := http.Post(
+		fmt.Sprintf("https://pkg.dev/bluejutzu/gobot/initiate-upload?version=%s&size=%d",
+			version, len(binary)),
+		"application/json",
+		nil,
+	)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to initiate upload: %v", err)
+	}
+	defer initResp.Body.Close()
+
+	if initResp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to initiate upload, status: %s", initResp.Status)
 	}
 
-	// TODO: Replace with your actual pkg.dev publish endpoint
-	resp, err := http.Post("https://pkg.dev/bluejutzu/gobot/publish", "application/json", bytes.NewReader(data))
+	var uploadInfo struct {
+		UploadID string `json:"uploadId"`
+	}
+	if err := json.NewDecoder(initResp.Body).Decode(&uploadInfo); err != nil {
+		return fmt.Errorf("failed to decode upload info: %v", err)
+	}
+
+	// Upload chunks
+	for i := 0; i < len(binary); i += chunkSize {
+		end := i + chunkSize
+		if end > len(binary) {
+			end = len(binary)
+		}
+		chunk := binary[i:end]
+
+		// Create multipart form with chunk data
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+		part, err := writer.CreateFormFile("chunk", "binary-chunk")
+		if err != nil {
+			return fmt.Errorf("failed to create form file: %v", err)
+		}
+		if _, err := part.Write(chunk); err != nil {
+			return fmt.Errorf("failed to write chunk: %v", err)
+		}
+		if err := writer.WriteField("uploadId", uploadInfo.UploadID); err != nil {
+			return fmt.Errorf("failed to write upload ID: %v", err)
+		}
+		if err := writer.WriteField("partNumber", fmt.Sprintf("%d", i/chunkSize+1)); err != nil {
+			return fmt.Errorf("failed to write part number: %v", err)
+		}
+		writer.Close()
+
+		// Send chunk
+		chunkResp, err := http.Post(
+			"https://pkg.dev/bluejutzu/gobot/upload-chunk",
+			writer.FormDataContentType(),
+			body,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to upload chunk %d: %v", i/chunkSize+1, err)
+		}
+		chunkResp.Body.Close()
+
+		if chunkResp.StatusCode != http.StatusOK {
+			return fmt.Errorf("chunk upload failed with status: %s", chunkResp.Status)
+		}
+
+		fmt.Printf("Uploaded chunk %d of %d\n", i/chunkSize+1, (len(binary)+chunkSize-1)/chunkSize)
+	}
+
+	// Complete upload
+	completeResp, err := http.Post(
+		fmt.Sprintf("https://pkg.dev/bluejutzu/gobot/complete-upload?uploadId=%s", uploadInfo.UploadID),
+		"application/json",
+		nil,
+	)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to complete upload: %v", err)
 	}
-	defer resp.Body.Close()
+	defer completeResp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("pkg.dev publish failed with status: %s", resp.Status)
+	if completeResp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to complete upload, status: %s", completeResp.Status)
 	}
 
 	return nil
