@@ -131,8 +131,25 @@ func validateCommands() {
 		}
 
 		botContentStr := string(botContent)
-		inCommandArray := strings.Contains(botContentStr, fmt.Sprintf(`%s_Command`, strings.ToUpper(cmdName))) ||
-			strings.Contains(botContentStr, fmt.Sprintf(`%sCommand`, strings.Title(cmdName)))
+
+		commandVariations := []string{
+			fmt.Sprintf(`%s.Command`, strings.Split(filepath.Base(file), "_command.go")[0]),
+			fmt.Sprintf(`%s_Command`,  strings.Split(filepath.Base(file), "_command.go")[0]),
+			fmt.Sprintf(`%sCommand`,  strings.Split(filepath.Base(file), "_command.go")[0]),
+			fmt.Sprintf(`%s_Command`, strings.ToUpper(cmdName)),
+			fmt.Sprintf(`%sCommand`, strings.Title(cmdName)),
+			cmdName,
+			strings.Split(filepath.Base(file), "_command.go")[0],
+		}
+
+		inCommandArray := false
+		for _, variation := range commandVariations {
+			if strings.Contains(botContentStr, variation) {
+				inCommandArray = true
+				break
+			}
+		}
+
 		inHandlerMap := strings.Contains(botContentStr, fmt.Sprintf(`"%s":`, cmdName))
 
 		if !inCommandArray {
@@ -146,9 +163,7 @@ func validateCommands() {
 	}
 }
 
-// extractCommandName extracts the command name from a command file's content
 func extractCommandName(content string) string {
-	// This is a simple implementation - you might want to make it more robust
 	if strings.Contains(content, "Name:") {
 		lines := strings.Split(content, "\n")
 		for _, line := range lines {
