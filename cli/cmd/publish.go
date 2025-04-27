@@ -16,7 +16,7 @@ import (
 	"github.com/bluejutzu/GoBot/cli/version"
 	"github.com/spf13/cobra"
 )
-
+ 
 // PublishCmd represents the command that handles versioning and publishing of the CLI tool.
 // It manages version tagging, packaging the CLI source code, and publishing to pkg.dev.
 var PublishCmd = &cobra.Command{
