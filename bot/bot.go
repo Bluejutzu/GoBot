@@ -16,10 +16,14 @@ var (
 	BotToken string
 	commands = []*discordgo.ApplicationCommand{
 		ridealong.Command,
+
 		misc.ID_Commmand,
 		misc.PING_Command,
 		misc.EIGHTBALL_Command,
+
 		moderation.BAN_Command,
+		moderation.SOFTBAN_Command,
+		moderation.MUTE_Command,
 	}
 
 	/*
@@ -35,6 +39,8 @@ var (
 		"what-is-my-id": misc.ID_ParseCommand,
 		"8ball":         misc.EIGHTBALL_ParseCommand,
 		"ban":           moderation.BAN_ParseCommand,
+		"softban":       moderation.SOFTBAN_ParseCommand,
+		"mute":          moderation.MUTE_ParseCommand,
 	}
 )
 

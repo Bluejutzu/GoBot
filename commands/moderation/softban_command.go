@@ -5,34 +5,27 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var BAN_Command = &discordgo.ApplicationCommand{
-	Name:        "ban",
-	Description: "Ban a member from the current guild",
+var SOFTBAN_Command = &discordgo.ApplicationCommand{
+	Name:        "softban",
+	Description: "Ban a user imemdiately to purge their messages and then unban them",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
 			Type:        9,
 			Name:        "user",
-			Description: "The member to ban",
+			Description: "The member to softban",
 			Required:    true,
 		},
 		{
 			Type:        3,
 			Name:        "reason",
-			Description: "Why this member is being banned",
+			Description: "Why this member is being softbanned",
 			Required:    false,
-		},
-		{
-			Type:        10,
-			Name:        "delete-messages",
-			Description: "Delete messages from x days ago, leave empty if none (max: 7)",
-			Required:    false,
-			MaxValue:    7,
 		},
 	},
 }
 
-func BAN_ParseCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	ok := helpers.SafeCommandParse(i, BAN_Command.Name)
+func SOFTBAN_ParseCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	ok := helpers.SafeCommandParse(i, SOFTBAN_Command.Name)
 
 	if !ok {
 		return
@@ -54,24 +47,18 @@ func BAN_ParseCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 		return
 	}
-	
+
 	var (
 		data        = i.ApplicationCommandData()
 		memberToBan = data.Options[0].UserValue(s)
 		reason      string
-		days        int
 	)
+
 	if len(data.Options) > 1 {
 		reason = data.Options[1].StringValue()
 	}
 
-	if len(data.Options) > 2 {
-		days = int(data.Options[2].FloatValue())
-	}
-
-	guildID := i.GuildID
-
-	err := s.GuildBanCreateWithReason(guildID, memberToBan.ID, reason, days)
+	err := s.GuildBanCreateWithReason(i.GuildID, memberToBan.ID, reason, 7)
 	if err != nil {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -83,10 +70,22 @@ func BAN_ParseCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	err = s.GuildBanDelete(i.GuildID, memberToBan.ID)
+	if err != nil {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Failed to unban user: " + err.Error(),
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
+
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: "Successfully banned " + memberToBan.Username,
+			Content: "Successfully softbanned " + memberToBan.Username,
 		},
 	})
 }
