@@ -1,6 +1,8 @@
 package moderation
 
 import (
+	"fmt"
+
 	"github.com/bluejutzu/GoBot/helpers"
 	"github.com/bwmarrin/discordgo"
 )
@@ -31,6 +33,8 @@ func SOFTBAN_ParseCommand(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		return
 	}
 
+	dev := false
+
 	// Command was invoked in a DM
 	if i.Interaction.Member == nil || i.Interaction.User != nil {
 		return
@@ -49,17 +53,12 @@ func SOFTBAN_ParseCommand(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	}
 
 	var (
-		data        = i.ApplicationCommandData()
-		memberToBan = data.Options[0].UserValue(s)
-		reason      string
+		data             = i.ApplicationCommandData()
+		memberToBan, err = s.GuildMember(i.GuildID, data.Options[0].UserValue(s).ID)
+		reason           string
 	)
 
-	if len(data.Options) > 1 {
-		reason = data.Options[1].StringValue()
-	}
-
-	err := s.GuildBanCreateWithReason(i.GuildID, memberToBan.ID, reason, 7)
-	if err != nil {
+	if err != nil && !dev {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
@@ -70,8 +69,24 @@ func SOFTBAN_ParseCommand(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		return
 	}
 
-	err = s.GuildBanDelete(i.GuildID, memberToBan.ID)
-	if err != nil {
+	if len(data.Options) > 1 {
+		reason = data.Options[1].StringValue()
+	}
+
+	err = s.GuildBanCreateWithReason(i.GuildID, memberToBan.User.ID, reason, 7)
+	if err != nil && !dev {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Failed to ban user: " + err.Error(),
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
+
+	err = s.GuildBanDelete(i.GuildID, memberToBan.User.ID)
+	if err != nil && !dev {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
@@ -85,7 +100,63 @@ func SOFTBAN_ParseCommand(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: "Successfully softbanned " + memberToBan.Username,
+			Content: "Successfully softbanned " + memberToBan.User.Username + "\n DM'ing the user an invite link...",
 		},
 	})
+
+	channel, err := s.UserChannelCreate(memberToBan.User.ID)
+
+	if err != nil && !dev {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Failed to Create user DM: " + err.Error(),
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
+
+	guild, err := s.Guild(i.GuildID)
+
+	if err != nil && !dev {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Failed to fetch guild: " + err.Error(),
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
+
+	invite, err := s.ChannelInviteCreate(guild.SystemChannelID, discordgo.Invite{
+		MaxAge:    86400,
+		MaxUses:   1,
+		Temporary: false,
+	})
+
+	if err != nil && !dev {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Failed to create invite: " + err.Error(),
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
+
+	_, err = s.ChannelMessageSend(channel.ID, fmt.Sprintf("You've been banned from %v for %v. This is a new invite created to rejoin: %v", guild.Name, reason, invite))
+
+	if err != nil && !dev {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Failed to DM invite to user: " + err.Error() + fmt.Sprintf("\n-# %v", invite),
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
 }
