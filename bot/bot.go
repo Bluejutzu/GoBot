@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/bluejutzu/GoBot/commands/misc"
 	"github.com/bluejutzu/GoBot/commands/moderation"
@@ -13,13 +14,15 @@ import (
 )
 
 var (
-	BotToken string
+	BotToken string // Set in main.go
+
 	commands = []*discordgo.ApplicationCommand{
 		ridealong.Command,
 
 		misc.ID_Commmand,
 		misc.PING_Command,
 		misc.EIGHTBALL_Command,
+		misc.SAY_COMMAND,
 
 		moderation.BAN_Command,
 		moderation.SOFTBAN_Command,
@@ -41,7 +44,12 @@ var (
 		"ban":           moderation.BAN_ParseCommand,
 		"softban":       moderation.SOFTBAN_ParseCommand,
 		"mute":          moderation.MUTE_ParseCommand,
+		"say":           misc.SAY_ParseCommand,
 	}
+
+	Green     = "\033[32m"
+	Reset     = "\033[0m"
+	BrightRed = "\033[31;1m"
 )
 
 func Run() {
@@ -54,27 +62,33 @@ func Run() {
 		log.Fatal("Error creating Discord session:", err)
 	}
 
-	discord.Identify.Intents = discordgo.IntentsGuildMessages | discordgo.IntentsMessageContent | discordgo.IntentsGuildPresences
+	discord.Identify.Intents = discordgo.IntentsGuildMessages |
+		discordgo.IntentsMessageContent |
+		discordgo.IntentsGuildPresences |
+		discordgo.IntentsGuildMembers
 
 	err = discord.Open()
 	if err != nil {
 		log.Fatal("Error opening connection:", err)
 	}
 
-	registeredCommands := make([]*discordgo.ApplicationCommand, len(commands))
-	for i, command := range commands {
-		cmd, err := discord.ApplicationCommandCreate(discord.State.User.ID, "", command)
-		if err != nil {
-			log.Fatalf("Error creating command %v: %v", command.Name, err)
-		}
-		registeredCommands[i] = cmd
+	fmt.Println("Registering commands...")
+	startTime := time.Now()
+	// Use ApplicationCommandBulkOverwrite to register all commands at once.
+	// The second argument is the Guild ID - an empty string registers global commands.
+	registeredCommands, err := discord.ApplicationCommandBulkOverwrite(discord.State.User.ID, "", commands)
+	if err != nil {
+		log.Fatalf("%vError registering commands: %v%v", BrightRed, err, Reset)
 	}
+	duration := time.Since(startTime).Abs()
+	fmt.Printf("%vAll %d commands registered successfully! Took: %s%v\n", Green, len(registeredCommands), duration, Reset)
 
 	discord.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		switch i.Type {
 		case discordgo.InteractionApplicationCommand:
 			if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
 				h(s, i)
+				fmt.Printf("%v%v handler called%v\n", Green, i.ApplicationCommandData().Name, Reset)
 			}
 		case discordgo.InteractionModalSubmit:
 			ridealong.HandleModal(s, i)
@@ -84,11 +98,15 @@ func Run() {
 	})
 
 	defer func() {
-		for _, cmd := range registeredCommands {
-			err := discord.ApplicationCommandDelete(discord.State.User.ID, "", cmd.ID)
-			if err != nil {
-				log.Printf("Cannot delete command %v: %v", cmd.Name, err)
-			}
+		fmt.Println("\nCleaning up registered commands by bulk overwriting with an empty list...")
+		startTime := time.Now()
+		// Overwrite with an empty slice to delete all commands
+		_, err := discord.ApplicationCommandBulkOverwrite(discord.State.User.ID, "", []*discordgo.ApplicationCommand{})
+		if err != nil {
+			log.Printf("%vError cleaning up (deleting) commands: %v%v", BrightRed, err, Reset)
+		} else {
+			duration := time.Since(startTime).Abs()
+			fmt.Printf("%vCommands cleaned up successfully! Took: %s%v\n", Green, duration, Reset)
 		}
 		discord.Close()
 	}()
